@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   canBookSlot,
   canCancelBooking,
+  canDeleteService,
   canDeleteSlot,
   canPublishSlot,
   checkBookingLimit,
@@ -188,5 +189,38 @@ describe("R8 canDeleteSlot", () => {
 
   it("acepta borrar un hueco con solo reservas canceladas (límite)", () => {
     expect(canDeleteSlot([{ status: "cancelled" }]).ok).toBe(true);
+  });
+});
+
+describe("R8 canDeleteService", () => {
+  const slot = (offsetMs: number, status?: "confirmed" | "cancelled") => ({
+    startsAt: at(offsetMs),
+    bookings: status ? [{ status }] : [],
+  });
+
+  it("acepta borrar un servicio sin reservas confirmadas", () => {
+    expect(canDeleteService([slot(HOUR), slot(-HOUR, "cancelled")], NOW)).toEqual({ ok: true });
+    expect(canDeleteService([], NOW).ok).toBe(true);
+  });
+
+  it("rechaza si hay citas futuras confirmadas y pide cancelarlas", () => {
+    const result = canDeleteService([slot(HOUR, "confirmed"), slot(-HOUR, "confirmed")], NOW);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toMatch(/futuras.*Cancélalas/);
+  });
+
+  it("rechaza si solo hay citas pasadas, sin pedir cancelarlas (historial)", () => {
+    const result = canDeleteService([slot(-HOUR, "confirmed")], NOW);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toMatch(/historial/);
+      expect(result.error).not.toMatch(/Cancél/);
+    }
+  });
+
+  it("trata una cita que empieza exactamente ahora como pasada (límite)", () => {
+    const result = canDeleteService([slot(0, "confirmed")], NOW);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toMatch(/historial/);
   });
 });

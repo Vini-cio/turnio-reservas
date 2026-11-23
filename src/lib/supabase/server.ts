@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import type { Database } from "@/lib/types";
-import { requireSupabaseEnv } from "./env";
+import { readSupabaseEnv, requireSupabaseEnv } from "./env";
 
 /** Cliente de Supabase para Server Components, Server Actions y Route Handlers. */
 export async function createClient() {
@@ -24,4 +25,13 @@ export async function createClient() {
       },
     },
   });
+}
+
+/**
+ * ¿Hay variables de entorno de Supabase? Espera a la petición (`connection()`) para que las
+ * páginas con datos sean siempre dinámicas, aunque el build se haya hecho sin `.env.local`.
+ */
+export async function hasSupabaseEnv(): Promise<boolean> {
+  await connection();
+  return readSupabaseEnv() !== null;
 }

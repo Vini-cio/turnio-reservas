@@ -18,7 +18,7 @@ export type Service = {
   created_at: string;
 };
 
-export type Slot = {
+type Slot = {
   id: string;
   provider_id: string;
   service_id: string;
@@ -27,7 +27,7 @@ export type Slot = {
   created_at: string;
 };
 
-export type Booking = {
+type Booking = {
   id: string;
   slot_id: string;
   client_id: string;
@@ -79,7 +79,8 @@ export type Database = {
       services: {
         Row: Service;
         Insert: ServiceInsert;
-        Update: Partial<Pick<Service, "name" | "duration_min" | "price_cents">>;
+        /** La duración es inmutable (trigger `services_before_update`). */
+        Update: Partial<Pick<Service, "name" | "price_cents">>;
         Relationships: [
           {
             foreignKeyName: "services_provider_id_fkey";

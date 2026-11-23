@@ -1,5 +1,8 @@
 type SupabaseEnv = { url: string; anonKey: string };
 
+export const MISSING_ENV_MESSAGE =
+  "Supabase no está configurado: faltan NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY. Revisa .env.local (o las variables de entorno en Vercel).";
+
 /** Lee las variables públicas de Supabase en tiempo de ejecución; `null` si faltan. */
 export function readSupabaseEnv(): SupabaseEnv | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,9 +14,7 @@ export function readSupabaseEnv(): SupabaseEnv | null {
 export function requireSupabaseEnv(): SupabaseEnv {
   const env = readSupabaseEnv();
   if (!env) {
-    throw new Error(
-      "Faltan NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY. Revisa .env.local.",
-    );
+    throw new Error(MISSING_ENV_MESSAGE);
   }
   return env;
 }

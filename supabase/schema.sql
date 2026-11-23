@@ -9,6 +9,7 @@
 --   TUR02  hueco en el pasado (R2)   TUR03  huecos solapados (R3)     TUR04  hueco ya reservado (R4)
 --   TUR05  reservar hueco pasado o propio (R5)                        TUR06  máximo de reservas (R6)
 --   TUR07  cancelación fuera de plazo (R7)                            TUR08  borrar hueco reservado (R8)
+--   TUS01  la duración de un servicio no se puede cambiar (los huecos ya publicados dependen de ella)
 
 create extension if not exists btree_gist;
 
@@ -158,6 +159,27 @@ drop trigger if exists slots_before_write on public.slots;
 create trigger slots_before_write
   before insert or update on public.slots
   for each row execute function public.slots_before_write();
+
+-- La duración de un servicio es inmutable: los huecos publicados calculan su fin con ella.
+create or replace function public.services_before_update()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.duration_min is distinct from old.duration_min then
+    raise exception using errcode = 'TUS01',
+      message = 'La duración de un servicio no se puede cambiar. Crea un servicio nuevo con la duración que necesites.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists services_before_update on public.services;
+create trigger services_before_update
+  before update on public.services
+  for each row execute function public.services_before_update();
 
 -- R8: no se puede borrar un hueco con una reserva confirmada.
 create or replace function public.slots_before_delete()
@@ -418,3 +440,4 @@ grant execute on function public.is_provider() to authenticated;
 revoke all on function public.handle_new_user() from public, anon, authenticated;
 revoke all on function public.slots_before_write() from public, anon, authenticated;
 revoke all on function public.slots_before_delete() from public, anon, authenticated;
+revoke all on function public.services_before_update() from public, anon, authenticated;

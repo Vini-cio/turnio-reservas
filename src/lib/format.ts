@@ -52,3 +52,17 @@ export function formatTime(value: Date | string): string {
 export function formatPrice(cents: number): string {
   return priceFormatter.format(cents / 100);
 }
+
+/** Ej.: "12,50" o "12.5" → 1250. `null` si no es un importe válido (≥ 0, máx. 2 decimales). */
+export function parsePriceToCents(input: string): number | null {
+  const match = /^(\d{1,6})(?:[.,](\d{1,2}))?$/.exec(input.trim());
+  if (!match) return null;
+  const euros = Number(match[1]);
+  const cents = Number((match[2] ?? "0").padEnd(2, "0"));
+  return euros * 100 + cents;
+}
+
+/** Ej.: 1250 → "12,50" (valor inicial de un input de precio). */
+export function centsToPriceInput(cents: number): string {
+  return (cents / 100).toFixed(2).replace(".", ",");
+}

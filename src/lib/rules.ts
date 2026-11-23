@@ -3,7 +3,7 @@
  * en supabase/schema.sql. Las que dependen del tiempo reciben `now` por parámetro.
  */
 
-export type RuleResult = { ok: true } | { ok: false; error: string };
+type RuleResult = { ok: true } | { ok: false; error: string };
 
 const OK: RuleResult = { ok: true };
 
@@ -127,6 +127,27 @@ export function canDeleteSlot(slotBookings: BookingState[]): RuleResult {
   if (slotBookings.some((booking) => booking.status === "confirmed")) {
     return fail(
       "No se puede borrar un hueco con una reserva confirmada. Cancela primero la reserva.",
+    );
+  }
+  return OK;
+}
+
+type ServiceSlot = { startsAt: Date; bookings: BookingState[] };
+
+/**
+ * R8 aplicado a un servicio: borrarlo borra sus huecos. No se puede si alguno tiene una reserva
+ * confirmada; las pasadas se conservan como historial del cliente.
+ */
+export function canDeleteService(slots: ServiceSlot[], now: Date): RuleResult {
+  const booked = slots.filter((slot) => !canDeleteSlot(slot.bookings).ok);
+  if (booked.some((slot) => slot.startsAt.getTime() > now.getTime())) {
+    return fail(
+      "No se puede borrar el servicio: tiene citas futuras confirmadas. Cancélalas primero.",
+    );
+  }
+  if (booked.length > 0) {
+    return fail(
+      "No se puede borrar el servicio: tiene citas pasadas en su historial. Puedes dejar de publicar huecos para él.",
     );
   }
   return OK;

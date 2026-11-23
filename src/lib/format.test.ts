@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatDateTime, formatPrice, formatTime } from "@/lib/format";
+import {
+  centsToPriceInput,
+  formatDate,
+  formatDateTime,
+  formatPrice,
+  formatTime,
+  parsePriceToCents,
+} from "@/lib/format";
 
 const normalize = (text: string) => text.replace(/\s/g, " ");
 
@@ -21,5 +28,24 @@ describe("format (es-ES, Europe/Madrid)", () => {
   it("usa el día de Madrid cerca de medianoche", () => {
     expect(normalize(formatDateTime("2026-11-23T23:30:00Z"))).toContain("24 de noviembre");
     expect(normalize(formatDateTime("2026-11-23T23:30:00Z"))).toContain("00:30");
+  });
+
+  it("convierte precios escritos en euros a céntimos", () => {
+    expect(parsePriceToCents("12,50")).toBe(1250);
+    expect(parsePriceToCents("12.5")).toBe(1250);
+    expect(parsePriceToCents(" 0 ")).toBe(0);
+    expect(parsePriceToCents("7,05")).toBe(705);
+  });
+
+  it("rechaza precios no válidos", () => {
+    expect(parsePriceToCents("-1")).toBeNull();
+    expect(parsePriceToCents("1,234")).toBeNull();
+    expect(parsePriceToCents("abc")).toBeNull();
+    expect(parsePriceToCents("")).toBeNull();
+  });
+
+  it("muestra céntimos como valor editable", () => {
+    expect(centsToPriceInput(1250)).toBe("12,50");
+    expect(centsToPriceInput(0)).toBe("0,00");
   });
 });
