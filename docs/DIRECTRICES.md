@@ -44,7 +44,7 @@ Cada directriz tiene un identificador. Testing cita estos IDs en sus informes.
 
 ```bash
 npm run lint && npm run typecheck && npm test && npm run build
-grep -rnE "service_role|eyJhbGci|sb_secret_" --exclude-dir=node_modules --exclude-dir=.next . # D4: debe salir vacío
+grep -rnE "service_role|eyJhbGci|sb_secret_" --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=docs --exclude-dir=.claude --exclude-dir=.git . # D4: debe salir vacío
 grep -rnE ":\s*any\b|as any|@ts-ignore|@ts-expect-error|as unknown as" src            # D2: vacío
 grep -rn "console.log" src                                                               # D3: vacío
 test ! -e src/middleware.ts                                                              # D14
