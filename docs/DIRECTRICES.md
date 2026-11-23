@@ -25,6 +25,9 @@ Cada directriz tiene un identificador. Testing cita estos IDs en sus informes.
 - **D10.** Las reglas también las impone la BD (constraint, trigger, RLS o RPC en
   `supabase/schema.sql`). Reservar y cancelar se hacen con RPC atómicas.
 - **D11.** `supabase/schema.sql` es idempotente: se puede ejecutar dos veces sin error.
+- **D19.** El esquema **no depende de privilegios por defecto**: concede explícitamente con `GRANT` a `anon`/`authenticated`
+  solo lo necesario (tabla y operación), además de las políticas RLS. Los proyectos nuevos de Supabase no exponen
+  tablas al Data API sin `GRANT`. Testing lo verifica con un Postgres sin grants por defecto o contra el Supabase real.
 
 ## Arquitectura Next.js
 - **D12.** Server Components por defecto; `"use client"` solo en componentes con estado o eventos.

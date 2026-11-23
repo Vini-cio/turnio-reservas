@@ -10,3 +10,6 @@
 | T2 | 1 | Orquestador | Decisión | Se reenvía el FAIL literal. Además: arreglar deleteService (éxito falso), eliminar código muerto. R8 se mantiene para el historial (no se borran servicios con citas pasadas) pero el mensaje debe explicarlo sin pedir "cancelar" |
 | T2 | 2 | Develop | Entregado | Fallo 1 → `src/lib/redirect.ts` lista blanca + tests; a) deleteService exige 1 fila; b) `canDeleteService` con mensajes futuro/historial + tests; c) código muerto eliminado; d) aviso R6 no oculta errores. 59 tests |
 | T2 | 2 | Testing | **PASS** | 0 fallos. Reprodujo el ataque de open redirect con servidor real: neutralizado. Revisión completa de criterios 1–11 y D1–D18 |
+| Integración con Supabase real | – | Orquestador | **FAIL** (prueba E2E) | `permission denied` en todas las tablas: el proyecto Supabase nuevo no concede privilegios por defecto; el stub local de Testing sí los simulaba. Se añade D19 y se abre T3 |
+| T3 GRANTs explícitos (D19) | 1 | Develop | Entregado | Sección de privilegios mínimos por tabla/rol; `is_my_client()` para que anon pueda leer profiles sin tocar bookings |
+| T3 | 1 | Testing | **PASS** | 0 fallos. Verificado en Postgres sin privilegios por defecto, schema ejecutado 3 veces, matriz anon/provider/client/otro client. Observación: update de services podría ser por columnas |

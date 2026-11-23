@@ -57,6 +57,8 @@ Requisitos: Node.js 20+ y una cuenta gratuita de [Supabase](https://supabase.com
 2. **Crea el proyecto en Supabase** y prepara la base de datos:
    - En *SQL Editor*, pega y ejecuta el contenido de [`supabase/schema.sql`](supabase/schema.sql).
      Es idempotente: puedes volver a ejecutarlo tras cada cambio.
+     Incluye los `GRANT` explícitos mínimos para `anon` y `authenticated` (los proyectos nuevos de
+     Supabase no exponen las tablas creadas por SQL sin ellos), así que no hace falta conceder nada a mano.
    - En *Authentication → Sign In / Providers → Email*, **desactiva "Confirm email"** para que el
      registro inicie sesión directamente (si lo dejas activo, la app pedirá confirmar el email).
 

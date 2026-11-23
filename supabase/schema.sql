@@ -90,6 +90,23 @@ as $$
   );
 $$;
 
+-- ¿El perfil dado es un cliente que ha reservado en alguno de mis huecos? Es security definer
+-- porque las políticas se evalúan con los privilegios de quien consulta, y anon no puede leer bookings.
+create or replace function public.is_my_client(p_client_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.bookings b
+    join public.slots s on s.id = b.slot_id
+    where b.client_id = p_client_id and s.provider_id = auth.uid()
+  );
+$$;
+
 -- ---------------------------------------------------------------------------
 -- Triggers
 -- ---------------------------------------------------------------------------
@@ -219,12 +236,7 @@ create policy profiles_select on public.profiles
   using (
     role = 'provider'
     or id = auth.uid()
-    or exists (
-      select 1
-      from public.bookings b
-      join public.slots s on s.id = b.slot_id
-      where b.client_id = profiles.id and s.provider_id = auth.uid()
-    )
+    or public.is_my_client(id)
   );
 
 drop policy if exists profiles_update_own on public.profiles;
@@ -234,8 +246,6 @@ create policy profiles_update_own on public.profiles
   with check (id = auth.uid());
 
 -- Sin políticas de insert/delete en profiles: los crea el trigger de registro.
-revoke insert, update, delete on public.profiles from anon, authenticated;
-grant update (full_name) on public.profiles to authenticated;
 
 -- services
 drop policy if exists services_select on public.services;
@@ -275,8 +285,6 @@ create policy slots_delete_own on public.slots
   for delete to authenticated
   using (provider_id = auth.uid());
 
-revoke update on public.slots from anon, authenticated;
-
 -- bookings: las ve el cliente o el profesional del hueco. Solo se escriben vía RPC.
 drop policy if exists bookings_select_involved on public.bookings;
 create policy bookings_select_involved on public.bookings
@@ -286,7 +294,29 @@ create policy bookings_select_involved on public.bookings
     or exists (select 1 from public.slots s where s.id = bookings.slot_id and s.provider_id = auth.uid())
   );
 
-revoke insert, update, delete on public.bookings from anon, authenticated;
+-- ---------------------------------------------------------------------------
+-- Privilegios de tablas (D19): no se depende de los privilegios por defecto del proyecto.
+-- Primero se retira todo (idempotente) y después se concede solo lo necesario; RLS filtra las filas.
+-- ---------------------------------------------------------------------------
+
+grant usage on schema public to anon, authenticated;
+
+revoke all on public.profiles, public.services, public.slots, public.bookings from anon, authenticated;
+
+-- profiles: lectura pública (RLS: profesionales, el propio perfil y mis clientes); solo se edita full_name.
+grant select on public.profiles to anon, authenticated;
+grant update (full_name) on public.profiles to authenticated;
+
+-- services: lectura pública; el profesional crea, edita y borra los suyos.
+grant select on public.services to anon, authenticated;
+grant insert, update, delete on public.services to authenticated;
+
+-- slots: lectura pública; el profesional publica y borra los suyos (no se editan).
+grant select on public.slots to anon, authenticated;
+grant insert, delete on public.slots to authenticated;
+
+-- bookings: solo lectura para usuarios con sesión; se escriben únicamente vía RPC.
+grant select on public.bookings to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- RPC
@@ -436,6 +466,9 @@ grant execute on function public.free_slots(uuid) to anon, authenticated;
 
 revoke all on function public.is_provider() from public, anon;
 grant execute on function public.is_provider() to authenticated;
+
+revoke all on function public.is_my_client(uuid) from public;
+grant execute on function public.is_my_client(uuid) to anon, authenticated;
 
 revoke all on function public.handle_new_user() from public, anon, authenticated;
 revoke all on function public.slots_before_write() from public, anon, authenticated;
