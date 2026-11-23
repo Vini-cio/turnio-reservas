@@ -1,5 +1,13 @@
 # Turnio — reservas de citas
 
+## Demo
+
+- **App en producción:** https://turnio-reservas.vercel.app
+- **Usuarios de prueba** (contraseña `Turnio2026!` en ambos):
+  - Profesional: `profesional@turnio-demo.com` → `/panel` (servicios, huecos, reservas recibidas)
+  - Cliente: `cliente@turnio-demo.com` → `/mis-citas` (reservar, cancelar)
+
+
 Turnio conecta a **profesionales** (peluqueros, fisios, profesores…) que publican sus huecos libres
 con **clientes** que los reservan en segundos.
 

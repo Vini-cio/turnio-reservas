@@ -13,3 +13,6 @@
 | Integración con Supabase real | – | Orquestador | **FAIL** (prueba E2E) | `permission denied` en todas las tablas: el proyecto Supabase nuevo no concede privilegios por defecto; el stub local de Testing sí los simulaba. Se añade D19 y se abre T3 |
 | T3 GRANTs explícitos (D19) | 1 | Develop | Entregado | Sección de privilegios mínimos por tabla/rol; `is_my_client()` para que anon pueda leer profiles sin tocar bookings |
 | T3 | 1 | Testing | **PASS** | 0 fallos. Verificado en Postgres sin privilegios por defecto, schema ejecutado 3 veces, matriz anon/provider/client/otro client. Observación: update de services podría ser por columnas |
+| E2E Supabase real tras T3 | – | Orquestador | OK | R1–R8, RLS, grants y RPC correctos contra el proyecto real (anon/provider/client). Datos demo cargados |
+| E2E producción Vercel | – | Orquestador | **FAIL** | `/` sirve HTML pre-renderizado en build (`x-nextjs-prerender: 1`, `x-vercel-cache: HIT`) con el error de permisos congelado. Con env presente las páginas de datos no son dinámicas: Develop y Testing solo lo comprobaron sin env. Se abre T4 |
+| E2E producción Vercel (2º intento) | – | Orquestador | **OK** | Causa real: variables `NEXT_PUBLIC_*` creadas como *Secret* en Vercel. Recreadas como *Config* + redeploy sin caché. `/`, `/p/[id]` con datos reales; no hizo falta T4 |
